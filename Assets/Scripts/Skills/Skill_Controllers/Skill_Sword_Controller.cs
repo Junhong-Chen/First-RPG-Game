@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -169,7 +168,6 @@ public class Skill_Sword_Controller : MonoBehaviour
                     isReturning = true;
                 }
 
-                // ��ͣʱ�����˺�
                 hitTimer -= Time.deltaTime;
 
                 if (hitTimer < 0)
@@ -207,7 +205,12 @@ public class Skill_Sword_Controller : MonoBehaviour
 
     private void SwordDamageEnemy(Enemy enemy)
     {
-        enemy.StartCoroutine("FreezeTimeFor", freezeTimeDuration);
+        if (player.skill.sword.timeStopUnlocked)
+            enemy.FreezeTimeFor(freezeTimeDuration);
+
+        if (player.skill.sword.vulnerabilityUnlocked)
+            enemy.stats.MakeVulnerableFor(freezeTimeDuration);
+
         player.stats.DoDamage(enemy.stats);
     }
 

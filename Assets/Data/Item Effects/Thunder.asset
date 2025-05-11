@@ -9,11 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec99011204587114c8e89ce3980a745b, type: 3}
-  m_Name: Wooden Sword
+  m_Script: {fileID: 11500000, guid: 05a72009c3e8452499a2d42825974f15, type: 3}
+  m_Name: Thunder
   m_EditorClassIdentifier: 
-  itemName: wooden sword
-  itemDescription: 
-  itemType: 1
-  itemIcon: {fileID: 1025091068, guid: a9ca9a41598dd2e44b125928045c518f, type: 3}
-  equipmentType: 0
+  thunderPrefab: {fileID: 8136957188768477757, guid: daaeb755430b5f04c83b0195edb0285e, type: 3}

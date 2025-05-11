@@ -19,6 +19,8 @@ public class Skill_Clone_Controller : MonoBehaviour
     private bool canDuplicate;
     private float duplicateRatio = .33f;
 
+    private float attackDamageMultiplier = 1f;
+
     private void Awake()
     {
         sr = GetComponent<SpriteRenderer>();
@@ -39,13 +41,14 @@ public class Skill_Clone_Controller : MonoBehaviour
         }
     }
 
-    public void SetupClone(Transform _transform, Transform _closestEnemy, float stayDuration, bool canAttack, Vector3 offset, bool _canDuplicate, float _duplicateRatio)
+    public void SetupClone(Transform _transform, Transform _closestEnemy, float stayDuration, bool canAttack, Vector3 offset, bool _canDuplicate, float _duplicateRatio, float _attackDamageMultiplier)
     {
         transform.position = _transform.position + offset;
         closestEnemy = _closestEnemy;
         timer = stayDuration;
         canDuplicate = _canDuplicate;
         duplicateRatio = _duplicateRatio;
+        attackDamageMultiplier = _attackDamageMultiplier;
 
         if (canAttack) {
             anim.SetInteger("attackNumber", Random.Range(1, 4));
@@ -65,9 +68,16 @@ public class Skill_Clone_Controller : MonoBehaviour
 
         foreach (var collider in colliders)
         {
+            Player player = PlayerManager.instance.player;
             Enemy enemy = collider.GetComponent<Enemy>();
+
             if (enemy != null)
-                PlayerManager.instance.player.stats.DoDamage(enemy.stats); // 造成伤害
+                player.stats.DoDamage(enemy.stats, attackDamageMultiplier); // 造成伤害
+
+            if (SkillManager.instance.clone.cloneAggressiveUnlocked)
+            {
+                Inventory.Instance.GetEquipmentByType(EquipmentType.Weapon)?.Effects(player, enemy); // 触发武器特效
+            }
 
             if (canDuplicate)
             {

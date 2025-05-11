@@ -2,27 +2,32 @@ using UnityEngine;
 
 public class ItemObject : MonoBehaviour
 {
-    private SpriteRenderer sr;
-
     [SerializeField] private ItemData itemData;
+    [SerializeField] private Rigidbody2D rb;
 
-    private void OnValidate()
+    public void SetupItem(ItemData itemData, Vector2 velocity)
     {
-        sr = GetComponent<SpriteRenderer>();
-        sr.sprite = itemData.itemIcon;
+        this.itemData = itemData;
+        rb.linearVelocity = velocity;
 
-        gameObject.name = "Item Object - " + itemData.itemName;
+        SetupVisuals();
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    public void PickupItem()
     {
-        Player player = collision.GetComponent<Player>();
-        if (player != null)
-        {
-            //player.AddItem(itemData);
-            Inventory.Instance.AddItem(itemData);
+        if (Inventory.Instance.AddItem(itemData))
             Destroy(gameObject);
-            Debug.Log("Picked up item: " + itemData.itemName);
-        }        
+        else
+            rb.linearVelocityY = 2f;
+    }
+    private void SetupVisuals()
+    {
+        if (this.itemData != null)
+        {
+            SpriteRenderer sr = GetComponent<SpriteRenderer>();
+            sr.sprite = itemData.icon;
+
+            gameObject.name = "Item Object - " + itemData.itemName;
+        }
     }
 }

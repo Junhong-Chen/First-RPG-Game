@@ -107,7 +107,7 @@ public class Skill_Blackhole_Controller : MonoBehaviour
         int randomIndex = Random.Range(0, targets.Count);
         Transform chooseEnemy = targets[randomIndex];
 
-        if (SkillManager.instance.clone.useCrystalInsteadOfClone)
+        if (SkillManager.instance.clone.crystalInsteadUnlocked)
         {
             SkillManager.instance.crystal.CreateCrystal();
             SkillManager.instance.crystal.ChooseEnemy(chooseEnemy);

@@ -84,14 +84,22 @@ public class Player : Entity
 
         CheckForDashInput();
 
-        if (Input.GetKeyDown(KeyCode.F))
+        if (Input.GetKeyDown(KeyCode.F) && skill.crystal.crystalUnlocked)
         {
             skill.crystal.CanUseSkill();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            Inventory.Instance.UseFlask();
         }
     }
 
     private void CheckForDashInput()
     {
+        if (!SkillManager.instance.dash.dashUnlocked)
+            return;
+
         if (stateMachine.currentState != blackholeState && !IsWallDetecteded() && Input.GetKeyDown(KeyCode.LeftShift) && SkillManager.instance.dash.CanUseSkill())
         {
             dashDir = Input.GetAxisRaw("Horizontal");

@@ -11,13 +11,13 @@ public class InventoryItem
         this.data = data;
     }
 
-    public void AddCount()
+    public void AddCount(int amount = 1)
     {
-        count++;
+        count += amount;
     }
 
-    public void RemoveCount()
+    public void RemoveCount(int amount = 1)
     {
-        count--;
+        count -= amount;
     }
 }

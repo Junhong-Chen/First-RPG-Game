@@ -44,13 +44,22 @@ public class Skill_Sword : Skill
 
     private GameObject[] dots;
 
+    public bool swordUnlocked { get; private set; }
+    public bool timeStopUnlocked { get; private set; }
+    public bool vulnerabilityUnlocked { get; private set; }
+    private bool bounceUnlocked;
+    private bool bulletUnlocked;
+    private bool chainSawUnlocked;
+
     protected override void Start()
     {
         base.Start();
 
         GenerateDots();
 
-        SetupGravite();
+        //SetupGravite();
+
+        SkillManager.instance.onUnlockSkill += UpdateStatus;
     }
 
     protected override void Update()
@@ -72,6 +81,13 @@ public class Skill_Sword : Skill
 
             DotsActive(false);
         }
+    }
+
+    public override void UseSkill()
+    {
+        base.UseSkill();
+
+        SkillManager.instance.onUseSkill.Invoke(SkillType.Sword);
     }
 
     private void SetupGravite()
@@ -108,12 +124,43 @@ public class Skill_Sword : Skill
                 break;
         }
 
-        SetupGravite();
-
         player.AssignNewSword(newSword);
 
         newSwordScript.SetupSword(finalDir, swordGravity, player, freezeTimeDuration, returnSpeed);
     }
+
+    #region Unlock
+    private void UpdateStatus(int skillId, bool unlocked)
+    {
+        switch (skillId)
+        {
+            case 0:
+                swordUnlocked = unlocked;
+                break;
+            case 1:
+                timeStopUnlocked = unlocked;
+                break;
+            case 2:
+                vulnerabilityUnlocked = unlocked;
+                break;
+            case 3:
+                bounceUnlocked = unlocked;
+                type = SwordType.Bounce;
+                SetupGravite();
+                break;
+            case 4:
+                bulletUnlocked = unlocked;
+                type = SwordType.Pierce;
+                SetupGravite();
+                break;
+            case 5:
+                chainSawUnlocked = unlocked;
+                type = SwordType.Spin;
+                SetupGravite();
+                break;
+        }
+    }
+    #endregion
 
     #region Aim
     public Vector2 AimDirction()
@@ -139,7 +186,7 @@ public class Skill_Sword : Skill
         for (int i = 0; i < numberOfDots; i++)
         {
             dots[i] = Instantiate(dotPrefab, player.transform.position, Quaternion.identity, dotsParent);
-            dots[i].SetActive(false); // 禁用/使其隐藏
+            dots[i].SetActive(false); // 禁用，使其隐藏
         }
     }
 

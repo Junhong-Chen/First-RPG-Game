@@ -10,9 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 963519dfc59612e46bd33111da04b87e, type: 3}
-  m_Name: Diamond
+  m_Name: Iron
   m_EditorClassIdentifier: 
-  itemName: diamond
-  itemDescription: 
-  itemType: 
-  itemIcon: {fileID: 1534190214, guid: a9ca9a41598dd2e44b125928045c518f, type: 3}
+  itemName: Iron
+  description: 
+  type: 0
+  icon: {fileID: 1025795234, guid: a9ca9a41598dd2e44b125928045c518f, type: 3}
+  dropChance: 0.5

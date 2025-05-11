@@ -1,31 +1,39 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Security.Cryptography;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 public class Skill_Clone : Skill
 {
-    [Header("Clone Info")]
+    [Header("Info")]
     [SerializeField] private GameObject clonePrefab;
     [SerializeField] private float stayDuration;
-    [Space]
-    [SerializeField] private bool canAttack;
+    [SerializeField] private float attackDamageMultiplier;
 
-    [SerializeField] private bool createCloneOnDashStart;
-    [SerializeField] private bool createCloneOnDashEnd;
-    [SerializeField] private bool createCloneOnCounterAttack;
+    [Header("Attack")]
+    [SerializeField] private bool cloneAttackUnlocked;
+    [SerializeField] private float cloneAttackDamageMultiplier = .3f;
 
-    [Header("Clone Duplicate")]
-    [SerializeField] private bool createCloneDuplicate;
-    [SerializeField] private float createDuplicateRatio = .33f;
+    [Header("Aggresive")]
+    [SerializeField] public bool cloneAggressiveUnlocked { get; private set; }
+    [SerializeField] private float cloneAggressiveMultiplier = .8f;
+
+    [Header("Duplicate")]
+    [SerializeField] private bool cloneDuplicateUnlocked;
+    [SerializeField] private float cloneDuplicateDamageMultiplier = .3f;
+    [SerializeField] private float duplicateRatio = .33f;
 
     [Header("Crystal Instead Of Clone")]
-    [SerializeField] public bool useCrystalInsteadOfClone;
+    [SerializeField] public bool crystalInsteadUnlocked { get; private set; }
+
+    protected override void Start()
+    {
+        base.Start();
+
+        SkillManager.instance.onUnlockSkill += UpdateStatus;
+    }
 
     public void CreateClone(Transform clonePosition, Vector3 offset = default)
     {
-        if (useCrystalInsteadOfClone)
+        if (crystalInsteadUnlocked)
         {
             SkillManager.instance.crystal.CreateCrystal();
             return;
@@ -34,31 +42,39 @@ public class Skill_Clone : Skill
         GameObject clone = Instantiate(clonePrefab);
 
         Transform closestEnemy = FindClosestEnemy(clonePosition);
-        clone.GetComponent<Skill_Clone_Controller>().SetupClone(clonePosition, closestEnemy, stayDuration, canAttack, offset, createCloneDuplicate, createDuplicateRatio);
+        clone.GetComponent<Skill_Clone_Controller>().SetupClone(clonePosition, closestEnemy, stayDuration, cloneAttackUnlocked, offset, cloneDuplicateUnlocked, duplicateRatio, attackDamageMultiplier);
     }
 
-    public void CreateCloneOnDashStart(Transform target)
+    public void CreateCloneWithDelay(Transform target)
     {
-        if (createCloneOnDashStart)
-            CreateClone(target);
+        StartCoroutine(CloneDelayCoroutine(target, new Vector3(player.facingDir, 0)));
     }
 
-    public void CreateCloneOnDashEnd(Transform target)
-    {
-        if (createCloneOnDashEnd)
-            CreateClone(target);
-    }
-
-    public void CreateCloneOnCounterAttack(Transform target)
-    {
-
-        if (createCloneOnCounterAttack)
-            StartCoroutine(CreateCloneWithDelay(target, new Vector3(player.facingDir, 0)));
-    }
-
-    private IEnumerator CreateCloneWithDelay(Transform pos, Vector3 offset)
+    private IEnumerator CloneDelayCoroutine(Transform pos, Vector3 offset)
     {
         yield return new WaitForSeconds(.3f);
         CreateClone(pos, offset);
+    }
+
+    private void UpdateStatus(int skillId, bool unlocked)
+    {
+        switch (skillId)
+        {
+            case 6:
+                cloneAttackUnlocked = unlocked;
+                if (unlocked) attackDamageMultiplier = cloneAttackDamageMultiplier;
+                break;
+            case 7:
+                cloneAggressiveUnlocked = unlocked;
+                if (unlocked) attackDamageMultiplier = cloneAggressiveMultiplier;
+                break;
+            case 8:
+                cloneDuplicateUnlocked = unlocked;
+                if (unlocked) attackDamageMultiplier = cloneDuplicateDamageMultiplier;
+                break;
+            case 9:
+                crystalInsteadUnlocked = unlocked;
+                break;
+        }
     }
 }

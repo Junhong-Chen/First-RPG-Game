@@ -10,8 +10,11 @@ public enum ItemType
 public class ItemData : ScriptableObject
 {
     public string itemName;
-    public string itemDescription;
-    public ItemType itemType;
+    public string description;
+    public ItemType type;
     
-    public Sprite itemIcon;
+    public Sprite icon;
+
+    [Range(0f, 1f)]
+    public float dropChance;
 }

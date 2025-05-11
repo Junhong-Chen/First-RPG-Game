@@ -1,10 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public class Skill : MonoBehaviour
 {
-    [SerializeField] protected float cooldown;
+    [SerializeField] protected float _cooldown;
+    public float cooldown { get => _cooldown; protected set => _cooldown = value; }
+
     protected float cooldownTimer;
 
     protected Player player;
@@ -28,7 +29,6 @@ public class Skill : MonoBehaviour
             return true;
         }
 
-        Debug.Log("Skill is on cooldown.");
         return false;
     }
 

@@ -1,5 +1,23 @@
-using Unity.VisualScripting;
+using System.Collections;
 using UnityEngine;
+
+public enum StatType
+{
+    Strength,
+    Agility,
+    Intelligence,
+    Vitality,
+    Damage,
+    CritDamage,
+    CritChance,
+    MaxHealth,
+    Armor,
+    Evasion,
+    MagicResist,
+    FireDamage,
+    IceDamage,
+    LightningDamage
+}
 
 public class CharacterStats : MonoBehaviour
 {
@@ -39,14 +57,20 @@ public class CharacterStats : MonoBehaviour
     private float frozenTimer = 0; // 冰冻计时器
     private float frozenStrength = .5f; // 冰冻减速效果
 
+    private bool isVulnerable = false; // 是否易伤状态
+
+    [SerializeField] private GameObject thunderPrefab;
+
     [SerializeField] private int health;
 
-    private Entity entity;
+    protected Entity entity;
     private EntityFX fx;
 
-    private bool isDead = false; // 是否死亡
+    public bool isDead { get; private set; } = false; // 是否死亡
 
     public System.Action onHealthChange; // 事件：生命值变化
+
+    private ItemDrop dropSystem;
 
     protected virtual void Start()
     {
@@ -57,6 +81,8 @@ public class CharacterStats : MonoBehaviour
         fx = GetComponent<EntityFX>();
 
         onHealthChange?.Invoke();
+
+        dropSystem = GetComponent<ItemDrop>(); // 物品掉落系统
     }
 
     protected virtual void Update()
@@ -66,9 +92,37 @@ public class CharacterStats : MonoBehaviour
         HandleElectrifiedEffect();
     }
 
+    public Stat GetStatByType(StatType statType)
+    {
+        return statType switch
+        {
+            StatType.Strength => strength,
+            StatType.Agility => agility,
+            StatType.Intelligence => intelligence,
+            StatType.Vitality => vitality,
+            StatType.Damage => damage,
+            StatType.CritDamage => critDamage,
+            StatType.CritChance => critChance,
+            StatType.MaxHealth => maxHealth,
+            StatType.Armor => armor,
+            StatType.Evasion => evasion,
+            StatType.MagicResist => magicResist,
+            StatType.FireDamage => fireDamage,
+            StatType.IceDamage => iceDamage,
+            StatType.LightningDamage => lightningDamage,
+            _ => null
+        };
+    }
+
     public virtual void TakeDamage(int _damage)
     {
+        if (isVulnerable)
+        {
+            _damage = Mathf.RoundToInt(_damage * 1.1f); // 易伤状态多承受 10% 的伤害，只作用于物理伤害
+        }
+
         DecreaseHealth(_damage);
+        //Debug.Log(entity);
         entity.DamageImpact();
         fx.StartCoroutine("FlashFX");
 
@@ -80,7 +134,7 @@ public class CharacterStats : MonoBehaviour
         }
     }
 
-    public void DoDamage(CharacterStats _targetStats)
+    public void DoDamage(CharacterStats _targetStats, float multiplier = 1f)
     {
         if (canAvoidAttack(_targetStats) || isDead) return; // 闪避或死亡
 
@@ -94,14 +148,18 @@ public class CharacterStats : MonoBehaviour
         totalDamage = Mathf.Max(0, totalDamage - _targetStats.armor.GetValue()); // 物理防御
         //totalDamage *= (1 - _targetStats.vitality.GetValue() / 100f; // 物理抵抗
 
+        totalDamage = Mathf.RoundToInt(totalDamage * multiplier); // 伤害倍率
+
         _targetStats.TakeDamage(totalDamage);
-        //DoDamageOfMagic(_targetStats); // 魔法伤害
     }
 
     public virtual void Die()
     {
-        entity.Die();
         isDead = true;
+
+        entity.Die();
+
+        dropSystem.Drop();
     }
 
     #region Magic Damage & Ailments
@@ -115,7 +173,7 @@ public class CharacterStats : MonoBehaviour
         int _magicDamage = intelligence.GetValue();
 
         int totalMagicDamage = _fireDamage + _iceDamage + _lightningDamage + _magicDamage;
-        totalMagicDamage -= _targetStats.magicResist.GetValue() + _targetStats.intelligence.GetValue();  
+        totalMagicDamage -= _targetStats.magicResist.GetValue() + _targetStats.intelligence.GetValue();
         totalMagicDamage = Mathf.Max(0, totalMagicDamage);
 
         _targetStats.TakeDamage(totalMagicDamage);
@@ -198,6 +256,18 @@ public class CharacterStats : MonoBehaviour
     }
 
     public void SetupBurnedDamage(int _damage) => burnedDamage = _damage;
+
+    public void MakeVulnerableFor(float duration)
+    {
+        StartCoroutine(VulnerableCoroutine(duration));
+    }
+
+    private IEnumerator VulnerableCoroutine(float duration)
+    {
+        isVulnerable = true;
+        yield return new WaitForSeconds(duration);
+        isVulnerable = false;
+    }
     #endregion
 
     #region Stat calculation
@@ -211,6 +281,15 @@ public class CharacterStats : MonoBehaviour
         return health;
     }
 
+    public virtual void IncreaseHealth(int _amount)
+    {
+        health += _amount;
+        if (health > GetMaxHealth())
+            health = GetMaxHealth();
+
+        onHealthChange?.Invoke();
+    }
+
     protected virtual void DecreaseHealth(int _amount)
     {
         health -= _amount;
@@ -218,11 +297,14 @@ public class CharacterStats : MonoBehaviour
         onHealthChange?.Invoke();
     }
 
+    protected virtual void OnEvasion() { }
+
     private bool canAvoidAttack(CharacterStats _targetStats)
     {
         int totalEvasion = _targetStats.evasion.GetValue() + agility.GetValue();
         if (Random.Range(0, 100) < totalEvasion)
         {
+            _targetStats.OnEvasion();
             return true;
         }
 

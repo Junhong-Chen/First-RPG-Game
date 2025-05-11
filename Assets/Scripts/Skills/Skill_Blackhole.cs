@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class Skill_Blackhole : Skill
 {
+    public bool blackholeUnlocked {  get; private set; }
+
     [SerializeField] private GameObject blackholePrefab;
     [Space]
     [SerializeField] private float duration = 4; // 技能持续时间
@@ -36,11 +38,15 @@ public class Skill_Blackhole : Skill
             attackCooldown,
             duration
         );
+
+        SkillManager.instance.onUseSkill.Invoke(SkillType.Blackhole);
     }
 
     protected override void Start()
     {
         base.Start();
+
+        SkillManager.instance.onUnlockSkill += UpdateStatus;
     }
 
     protected override void Update()
@@ -57,5 +63,15 @@ public class Skill_Blackhole : Skill
         }
 
         return false;
+    }
+
+    private void UpdateStatus(int skillId, bool unlocked)
+    {
+        switch (skillId)
+        {
+            case 10:
+                blackholeUnlocked = unlocked;
+                break;
+        }
     }
 }

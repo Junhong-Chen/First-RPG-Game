@@ -77,7 +77,13 @@ public class Skill_Crystal_Controller: MonoBehaviour
         {
             Enemy enemy = collider.GetComponent<Enemy>();
             if (enemy != null)
-                PlayerManager.instance.player.stats.DoDamageOfMagic(enemy.stats); // 造成伤害
+            {
+                Player player = PlayerManager.instance.player;
+
+                player.stats.DoDamageOfMagic(enemy.stats); // 造成伤害
+
+                Inventory.Instance.GetEquipmentByType(EquipmentType.Accessory)?.Effects(player, enemy); // 触发饰品特效
+            }
         }
     }
 }

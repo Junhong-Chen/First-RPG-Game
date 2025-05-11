@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Enemy : Entity
@@ -87,13 +86,18 @@ public class Enemy : Entity
         }
     }
 
-    public virtual IEnumerator FreezeTimeFor(float seconds)
+    public virtual IEnumerator FreezeTimeCoroutine(float seconds)
     {
         FreezeTime(true);
 
         yield return new WaitForSeconds(seconds);
 
         FreezeTime(false);
+    }
+
+    public virtual void FreezeTimeFor(float seconds)
+    {
+        StartCoroutine(FreezeTimeCoroutine(seconds));
     }
 
     #region Counter Attack Window

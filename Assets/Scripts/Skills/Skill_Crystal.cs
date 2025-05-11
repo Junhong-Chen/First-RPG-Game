@@ -1,48 +1,53 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Skill_Crystal: Skill
+public class Skill_Crystal : Skill
 {
     [SerializeField] private GameObject crystalPrefab;
     [SerializeField] private float crystalDuration = 7f;
 
     private GameObject crystal;
+    public bool crystalUnlocked { get; private set; } = false;
 
     [Header("Mirage Crystal")]
-    [SerializeField] private bool canMirror = false;
+    [SerializeField] private bool blinkUnlocked = false;
 
     [Header("Explosive Crystal")]
-    [SerializeField] private bool canExplode = false;
+    [SerializeField] private bool explodeUnlocked = false;
 
     [Header("Moving Crystal")]
-    [SerializeField] private bool canMoveToEnemy = false;
+    [SerializeField] private bool moveToEnemyUnlocked = false;
     [SerializeField] private float moveSpeed = 1f;
 
     [Header("Multi Stacking Crystals")]
-    [SerializeField] private bool canMulti = false;
+    [SerializeField] private bool multipleUnlocked = false;
     [SerializeField] private int amountOfStacks;
     [SerializeField] private float multiStackCooldown;
     [SerializeField] private float useTimeWindow;
     [SerializeField] private List<GameObject> crystals = new List<GameObject>();
 
+    protected override void Start()
+    {
+        base.Start();
+
+        SkillManager.instance.onUnlockSkill += UpdateStatus; // Subscribe to the skill unlock event
+    }
+
     public override void UseSkill()
     {
         base.UseSkill();
 
-        if (CanUseMultiCrystal())
-            return;
-
-        if (crystal)
+        if (multipleUnlocked)
         {
-            if (canMoveToEnemy)
-                return;
-
+            UseMultiCrystal();
+        }
+        else if (crystal && !moveToEnemyUnlocked)
+        {
             Vector2 playerPos = player.transform.position;
             player.transform.position = crystal.transform.position; // Teleport the player to the crystal
             crystal.transform.position = playerPos; // Move the crystal to the player's position
 
-            if (canMirror) // 在原地留下一个镜像，并传送到水晶位置，然后销毁水晶
+            if (blinkUnlocked) // 在原地留下一个镜像，并传送到水晶位置，然后销毁水晶
             {
                 SkillManager.instance.clone.CreateClone(crystal.transform);
                 Destroy(crystal);
@@ -54,6 +59,8 @@ public class Skill_Crystal: Skill
         {
             CreateCrystal();
         }
+
+        SkillManager.instance.onUseSkill.Invoke(SkillType.Crystal);
     }
 
     public void CreateCrystal()
@@ -61,7 +68,7 @@ public class Skill_Crystal: Skill
         crystal = Instantiate(crystalPrefab, player.transform.position, Quaternion.identity);
         Transform closestEnemy = FindClosestEnemy(crystal.transform);
         Skill_Crystal_Controller contrallerScript = crystal.GetComponent<Skill_Crystal_Controller>();
-        contrallerScript.SetupCrystal(crystalDuration, canExplode, canMoveToEnemy, moveSpeed, closestEnemy); // Set the duration of the crystal
+        contrallerScript.SetupCrystal(crystalDuration, explodeUnlocked, moveToEnemyUnlocked, moveSpeed, closestEnemy); // Set the duration of the crystal
     }
 
     public void ChooseEnemy(Transform enemy)
@@ -72,9 +79,9 @@ public class Skill_Crystal: Skill
         }
     }
 
-    private bool CanUseMultiCrystal()
+    private bool UseMultiCrystal()
     {
-        if (canMulti)
+        if (multipleUnlocked)
         {
             if (crystals.Count > 0)
             {
@@ -88,7 +95,7 @@ public class Skill_Crystal: Skill
 
                 crystals.Remove(crystalToSpawn); // Remove the crystal from the list
 
-                crystal.GetComponent<Skill_Crystal_Controller>()?.SetupCrystal(crystalDuration, canExplode, canMoveToEnemy, moveSpeed, FindClosestEnemy(crystal.transform)); // Set the crystal
+                crystal.GetComponent<Skill_Crystal_Controller>()?.SetupCrystal(crystalDuration, explodeUnlocked, moveToEnemyUnlocked, moveSpeed, FindClosestEnemy(crystal.transform)); // Set the crystal
 
                 if (crystals.Count <= 0)
                 {
@@ -104,7 +111,7 @@ public class Skill_Crystal: Skill
 
     private void RefilCrystals()
     {
-        while(crystals.Count < amountOfStacks)
+        while (crystals.Count < amountOfStacks)
         {
             crystals.Add(crystalPrefab);
         }
@@ -117,5 +124,27 @@ public class Skill_Crystal: Skill
 
         cooldownTimer = multiStackCooldown;
         RefilCrystals();
+    }
+
+    private void UpdateStatus(int skillId, bool unlocked)
+    {
+        switch (skillId)
+        {
+            case 11:
+                crystalUnlocked = unlocked;
+                break;
+            case 12:
+                blinkUnlocked = unlocked;
+                break;
+            case 13:
+                explodeUnlocked = unlocked;
+                break;
+            case 14:
+                moveToEnemyUnlocked = unlocked;
+                break;
+            case 15:
+                multipleUnlocked = unlocked;
+                break;
+        }
     }
 }
